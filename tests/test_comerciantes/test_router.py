@@ -7,8 +7,7 @@ from tests.database import app, session
 client = TestClient(app)
 
 
-def test_read_personas(session: Session) -> None:
-    response = client.get(f"/personas")
+def test_read_comerciantes(session: Session) -> None:
+    response = client.get(f"/comerciantes")
     assert response.status_code == status.HTTP_200_OK
-    assert len(response.json()) == 2
-
+    assert len(response.json()) == 3
