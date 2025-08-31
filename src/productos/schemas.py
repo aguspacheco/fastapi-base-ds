@@ -1,22 +1,28 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, field_validator
+from src.productos.models import TipoProducto
+from src.productos import exceptions
 
 class ProductoBase(BaseModel):
-    precio: float = Field(..., gt=0, description="Precio del producto, debe ser mayor a 0")
-    masa: bool = Field(..., description="Si el producto tiene masa o no")
-    sabores: str = Field(..., min_length=1, description="Sabores del producto")
-    img: str | None = None
+    nombre: str
+    tipo: TipoProducto
+
+    @field_validator("tipo", mode="before")
+    @classmethod
+    def is_valid_tipo_producto(cls, v: str) -> str:
+        if v.lower() not in TipoProducto:
+            raise exceptions.TipoProductoInvalido(list(TipoProducto))
+        return v.lower()
 
 class ProductoCreate(ProductoBase):
     pass
 
-class ProductoUpdate(BaseModel):
-    precio: float | None = Field(None, gt=0)
-    masa: bool | None = None
-    sabores: str | None = None
-    img: str | None = None
+class ProductoUpdate(ProductoBase):
+    pass
 
-class ProductoOut(ProductoBase):
+class Producto(ProductoBase):
     id: int
+    tipo: TipoProducto
+    model_config = {"from_attributes": True} 
 
-    class Config:
-        from_attributes = True  
+class ProductoDelete(ProductoBase):
+    id: int

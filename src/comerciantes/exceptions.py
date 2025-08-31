@@ -1,9 +1,12 @@
-from fastapi import HTTPException, status
+from src.comerciantes.constants import ErrorCode
+from src.exceptions import NotFound, BadRequest
 
-class ComercianteNotFound(HTTPException):
-    def __init__(self):
-        super().__init__(status_code=status.HTTP_404_NOT_FOUND, detail="Comerciante no encontrado")
+class ComercianteNoEncontrada(NotFound):
+    DETAIL = ErrorCode.COMERCIANTE_NO_ENCONTRADA
 
-class EmailAlreadyExists(HTTPException):
-    def __init__(self):
-        super().__init__(status_code=status.HTTP_409_CONFLICT, detail="Email ya registrado")
+class EmailDuplicado(BadRequest):
+    DETAIL = ErrorCode.EMAIL_DUPLICADO
+
+
+class NombreDuplicado(BadRequest):
+    DETAIL = ErrorCode.NOMBRE_DUPLICADO

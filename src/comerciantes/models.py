@@ -1,13 +1,12 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, func
-from database import Base  
+from sqlalchemy import Boolean, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column
+from src.models import ModeloBase
 
-class Comerciante(Base):
+class Comerciante(ModeloBase):
     __tablename__ = "comerciantes"
 
-    id = Column(Integer, primary_key=True, index=True)
-    nombre = Column(String(200), nullable=False, index=True)
-    email = Column(String(255), unique=True, nullable=False, index=True)
-    telefono = Column(String(50), nullable=True)
-    direccion = Column(String(255), nullable=True)
-    activo = Column(Boolean, nullable=False, server_default="1")
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    nombre: Mapped[str] = mapped_column(String, index=True)
+    email: Mapped[str] = mapped_column(String)
+    telefono: Mapped[str] = mapped_column(String)
+    direccion: Mapped[str] = mapped_column(String)

@@ -1,11 +1,19 @@
-from sqlalchemy import Column, Integer, String, Boolean, Float
-from database import Base  
+from sqlalchemy import Integer, String
+from sqlalchemy.orm import Mapped, mapped_column
+from enum import auto, StrEnum
+from src.models import ModeloBase
 
-class Producto(Base):
+class TipoProducto(StrEnum):
+    ALAPIEDRA = auto()
+    HORNO = auto()
+    ALMOLDE = auto()
+    MASAMADRE = auto()
+    FINITA = auto()
+
+class Producto(ModeloBase):
     __tablename__ = "productos"
 
-    id = Column(Integer, primary_key=True, index=True)
-    precio = Column(Float, nullable=False)
-    masa = Column(Boolean, nullable=False, default=False)
-    sabores = Column(String(255), nullable=False)
-    img = Column(String(255), nullable=True)  
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    nombre: Mapped[str] = mapped_column(String, index=True)
+    tipo: Mapped[TipoProducto] = mapped_column(String) 
+ 

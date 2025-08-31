@@ -1,24 +1,18 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr
+
 
 class ComercianteBase(BaseModel):
-    nombre: str = Field(..., min_length=1, max_length=200)
+    nombre: str
     email: EmailStr
     telefono: str | None = None
     direccion: str | None = None
-    activo: bool = True
 
 class ComercianteCreate(ComercianteBase):
     pass
 
-class ComercianteUpdate(BaseModel):
-    nombre: str | None = Field(None, min_length=1, max_length=200)
-    email: EmailStr | None = None
-    telefono: str | None = None
-    direccion: str | None = None
-    activo: bool | None = None
+class ComercianteUpdate(ComercianteBase):
+    pass
 
-class ComercianteOut(ComercianteBase):
+class Comerciante(ComercianteBase):
     id: int
-
-    class Config:
-        from_attributes = True  # Pydantic v2: permite mapear desde ORM
+    model_config = {"from_attributes": True}

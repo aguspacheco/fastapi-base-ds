@@ -1,39 +1,26 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from database import get_session  # del proyecto base
-from . import services, schemas
-from .constants import ROUTER_PREFIX
-from .exceptions import ComercianteNotFound, EmailAlreadyExists
+from src.database import get_db  
+from src.comerciantes import schemas, services
 
-router = APIRouter(prefix=ROUTER_PREFIX, tags=["comerciantes"])
+router = APIRouter(prefix="/comerciantes", tags=["comerciantes"])
 
-@router.get("/", response_model=list[schemas.ComercianteOut])
-def list_comerciantes(skip: int = 0, limit: int = 100, db: Session = Depends(get_session)):
-    return services.get_all(db, skip=skip, limit=limit)
+@router.post("/", response_model=schemas.Comerciante)
+def create_comerciante(comerciante: schemas.ComercianteCreate, db: Session = Depends(get_db)):
+    return services.crear_comerciante(db, comerciante)
 
-@router.get("/{comerciante_id}", response_model=schemas.ComercianteOut)
-def get_comerciante(comerciante_id: int, db: Session = Depends(get_session)):
-    obj = services.get_by_id(db, comerciante_id)
-    if not obj:
-        raise ComercianteNotFound()
-    return obj
+@router.get("/", response_model=list[schemas.Comerciante])
+def read_comerciantes(db: Session = Depends(get_db)):
+    return services.listar_comerciantes(db)
 
-@router.post("/", response_model=schemas.ComercianteOut, status_code=status.HTTP_201_CREATED)
-def create_comerciante(data: schemas.ComercianteCreate, db: Session = Depends(get_session)):
-    if services.get_by_email(db, data.email):
-        raise EmailAlreadyExists()
-    return services.create(db, data)
+@router.get("/{comerciante_id}", response_model=schemas.Comerciante)
+def read_comerciante(comerciante_id: int, db: Session = Depends(get_db)):
+    return services.leer_comerciante(db, comerciante_id)
 
-@router.put("/{comerciante_id}", response_model=schemas.ComercianteOut)
-def update_comerciante(comerciante_id: int, data: schemas.ComercianteUpdate, db: Session = Depends(get_session)):
-    obj = services.update(db, comerciante_id, data)
-    if not obj:
-        raise ComercianteNotFound()
-    return obj
+#@router.put("/{comerciante_id}", response_model=schemas.Comerciante)
+#def update_comerciante(comerciante_id: int, comerciante: schemas.ComercianteUpdate, db: Session = Depends(get_db)):
+#    return services.modificar_comerciante(db, comerciante_id, comerciante)
 
-@router.delete("/{comerciante_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_comerciante(comerciante_id: int, db: Session = Depends(get_session)):
-    ok = services.delete(db, comerciante_id)
-    if not ok:
-        raise ComercianteNotFound()
-    return None
+@router.delete("/{comerciante_id}", response_model=schemas.Comerciante)
+def delete_comerciante(comerciante_id: int, db: Session = Depends(get_db)):
+    return services.eliminar_comerciante(db, comerciante_id)

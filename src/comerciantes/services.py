@@ -1,37 +1,28 @@
+from typing import List
+from sqlalchemy import select
 from sqlalchemy.orm import Session
-from . import models, schemas
+from src.comerciantes.models import Comerciante
+from src.comerciantes import schemas, exceptions
 
-def get_all(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.Comerciante).offset(skip).limit(limit).all()
-
-def get_by_id(db: Session, comerciante_id: int):
-    return db.query(models.Comerciante).filter(models.Comerciante.id == comerciante_id).first()
-
-def get_by_email(db: Session, email: str):
-    return db.query(models.Comerciante).filter(models.Comerciante.email == email).first()
-
-def create(db: Session, data: schemas.ComercianteCreate):
-    obj = models.Comerciante(**data.model_dump())
-    db.add(obj)
+def crear_comerciante(db: Session, comerciante: schemas.ComercianteCreate) -> schemas.Comerciante:
+    _comerciante = Comerciante(**comerciante.model_dump())
+    db.add(_comerciante)
     db.commit()
-    db.refresh(obj)
-    return obj
+    db.refresh(_comerciante)
+    return _comerciante
 
-def update(db: Session, comerciante_id: int, data: schemas.ComercianteUpdate):
-    obj = get_by_id(db, comerciante_id)
-    if not obj:
-        return None
-    for field, value in data.model_dump(exclude_unset=True).items():
-        setattr(obj, field, value)
-    db.add(obj)
-    db.commit()
-    db.refresh(obj)
-    return obj
 
-def delete(db: Session, comerciante_id: int):
-    obj = get_by_id(db, comerciante_id)
-    if not obj:
-        return False
-    db.delete(obj)
+def listar_comerciantes(db: Session) -> List[schemas.Comerciante]:
+    return db.scalars(select(Comerciante)).all()
+
+def leer_comerciante(db: Session, comerciante_id: int) -> schemas.Comerciante:
+    db_comerciante = db.scalar(select(Comerciante).where(Comerciante.id == comerciante_id))
+    if db_comerciante is None:
+        raise exceptions.ComercianteNoEncontrada()
+    return db_comerciante
+
+def eliminar_comerciante(db: Session, comerciante_id: int) -> schemas.Comerciante:
+    db_comerciante = leer_comerciante(db, comerciante_id)
+    db.delete(db_comerciante)
     db.commit()
-    return True
+    return db_comerciante

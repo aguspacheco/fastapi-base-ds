@@ -1,37 +1,26 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from database import get_session
-from . import services, schemas
-from .constants import ROUTER_PREFIX
-from .exceptions import ProductoNotFound
+from src.database import get_db
+from src.productos import schemas, services
 
-router = APIRouter(prefix=ROUTER_PREFIX, tags=["productos"])
+router = APIRouter(prefix="/productos", tags=["productos"])
 
-@router.get("/", response_model=list[schemas.ProductoOut])
-def list_productos(skip: int = 0, limit: int = 100, db: Session = Depends(get_session)):
-    return services.get_all(db, skip=skip, limit=limit)
+@router.post("/", response_model=schemas.Producto)
+def create_producto(producto: schemas.ProductoCreate, db: Session = Depends(get_db)):
+    return services.crear_producto(db, producto)
 
-@router.get("/{producto_id}", response_model=schemas.ProductoOut)
-def get_producto(producto_id: int, db: Session = Depends(get_session)):
-    obj = services.get_by_id(db, producto_id)
-    if not obj:
-        raise ProductoNotFound()
-    return obj
+@router.get("/", response_model=list[schemas.Producto])
+def read_productos(db: Session = Depends(get_db)):
+    return services.listar_productos(db)
 
-@router.post("/", response_model=schemas.ProductoOut, status_code=status.HTTP_201_CREATED)
-def create_producto(data: schemas.ProductoCreate, db: Session = Depends(get_session)):
-    return services.create(db, data)
+@router.get("/{producto_id}", response_model=schemas.Producto)
+def read_producto(producto_id: int, db: Session = Depends(get_db)):
+    return services.leer_producto(db, producto_id)
 
-@router.put("/{producto_id}", response_model=schemas.ProductoOut)
-def update_producto(producto_id: int, data: schemas.ProductoUpdate, db: Session = Depends(get_session)):
-    obj = services.update(db, producto_id, data)
-    if not obj:
-        raise ProductoNotFound()
-    return obj
+@router.put("/{producto_id}", response_model=schemas.Producto)
+def update_producto(producto_id: int, producto: schemas.ProductoUpdate, db: Session = Depends(get_db)):
+    return services.modificar_producto(db, producto_id, producto)
 
-@router.delete("/{producto_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_producto(producto_id: int, db: Session = Depends(get_session)):
-    ok = services.delete(db, producto_id)
-    if not ok:
-        raise ProductoNotFound()
-    return None
+@router.delete("/{producto_id}", response_model=schemas.ProductoDelete)
+def delete_producto(producto_id: int, db: Session = Depends(get_db)):
+    return services.eliminar_producto(db, producto_id)

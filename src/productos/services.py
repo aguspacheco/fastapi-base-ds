@@ -1,34 +1,35 @@
+from typing import List
+from sqlalchemy import delete, select, update
 from sqlalchemy.orm import Session
-from . import models, schemas
+from src.productos.models import Producto
+from src.productos import schemas, exceptions
 
-def get_all(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.Producto).offset(skip).limit(limit).all()
-
-def get_by_id(db: Session, producto_id: int):
-    return db.query(models.Producto).filter(models.Producto.id == producto_id).first()
-
-def create(db: Session, data: schemas.ProductoCreate):
-    obj = models.Producto(**data.model_dump())
-    db.add(obj)
+def crear_producto(db: Session, producto: schemas.ProductoCreate) -> schemas.Producto:
+    _producto = Producto(**producto.model_dump())
+    db.add(_producto)
     db.commit()
-    db.refresh(obj)
-    return obj
+    db.refresh(_producto)
+    return _producto
 
-def update(db: Session, producto_id: int, data: schemas.ProductoUpdate):
-    obj = get_by_id(db, producto_id)
-    if not obj:
-        return None
-    for field, value in data.model_dump(exclude_unset=True).items():
-        setattr(obj, field, value)
-    db.add(obj)
-    db.commit()
-    db.refresh(obj)
-    return obj
+def listar_productos(db: Session) -> List[schemas.Producto]:
+    return db.scalars(select(Producto)).all()
 
-def delete(db: Session, producto_id: int):
-    obj = get_by_id(db, producto_id)
-    if not obj:
-        return False
-    db.delete(obj)
-    db.commit()
-    return True
+def leer_producto(db: Session, producto_id: int) -> schemas.Producto:
+    db_producto = db.scalar(select(Producto).where(Producto.id == producto_id))
+    if db_producto is None:
+        raise exceptions.ProductoNoEncontrado()
+    return db_producto
+
+def modificar_producto(
+        db: Session, producto_id: int, producto: schemas.ProductoUpdate) -> Producto:
+        db_producto = leer_producto(db, producto_id)
+        db.excute(update(Producto).where(Producto.id == producto_id).values(**producto.model_dump()))
+        db.commit()
+        db.refresh(db_producto)
+        return db_producto
+        
+def eliminar_producto(db: Session, producto_id: int) -> schemas.ProductoDelete:
+     db_producto = leer_producto(db, producto_id)
+     db.execute(delete(Producto).where(Producto.id == producto_id))
+     db.commit()
+     return db_producto
